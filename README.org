@@ -1,0 +1,25 @@
+#+title: LiTile
+
+A little tiling script written in pure bash. Supports multiple horizontal 
+displays of the same resolution.
+
+Tested with Xfce, but should work with any floating WM.
+
+** Usage
+
+#+begin_src sh 
+litile [-d=numberofdisplays] action
+#+end_src
+
+*** Available actions:
+- tile - Tiles current display with master-stack layout, currently focused window being master
+- move-left - Moves window to left display
+- move-right - Move window to right display
+
+Defining number of displays in CLI or in ~/.config/litilerc makes it work faster.
+Otherwise xrandr is called every time which is slow.
+
+** Caveats
+- it assumes you have a top panel on every display (might fix it)
+- when tiling master window, top_bar value needs to be doubled for unknown reason
+
