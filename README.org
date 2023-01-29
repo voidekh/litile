@@ -5,6 +5,15 @@ displays of the same resolution.
 
 Tested with Xfce, but should work with any floating WM.
 
+** Dependencies
+You need following commands available in your $PATH:
+- awk
+- xprop
+- wmctrl
+- xwininfo
+- xrandr (optional)
+- notify-send (optional)
+
 ** Usage
 
 #+begin_src sh 
