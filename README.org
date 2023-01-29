@@ -11,6 +11,7 @@ You need following commands available in your $PATH:
 - xprop
 - wmctrl
 - xwininfo
+- xdotool
 - xrandr (optional)
 - notify-send (optional)
 
@@ -24,6 +25,8 @@ litile [-d=numberofdisplays] action
 - tile - Tiles current display with master-stack layout, currently focused window being master
 - move-left - Moves window to left display
 - move-right - Move window to right display
+- prev - Focus and move cursor to previous window on the same workspace
+- next - Focus and move cursor to next window on the same workspace
 
 Defining number of displays in CLI or in ~/.config/litilerc makes it work faster.
 Otherwise xrandr is called every time which is slow.
@@ -31,3 +34,7 @@ Otherwise xrandr is called every time which is slow.
 ** Caveats
 - it assumes you have a top panel on every display
 
+** Similar projects and inspirations
+- [[https://github.com/jaywilkas/xpytile][xpytile]]
+- [[https://github.com/jc00ke/move-to-next-monitor][move-to-next-monitor]]
+- [[https://gitlab.com/corthbandt/shinglify][shinglify]]

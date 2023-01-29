@@ -21,6 +21,8 @@
 # tile - Tiles current display with master-stack layout, currently focused window being master
 # move-left - Moves window to left display
 # move-right - Move window to right display
+# prev - Focus and move cursor to previous window on the same workspace
+# next - Focus and move cursor to next window on the same workspace
 #
 # Defining number of displays in CLI or in ~/.config/litilerc makes it work faster. Otherwise
 # xrandr is called every time.
@@ -83,6 +85,14 @@ function get_window_dimensions {
     w=$(echo "$win_info" | grep "Width:" | awk '{print $2}')
     h=$(echo "$win_info" | grep "Height:" | awk '{print $2}')
     echo -n "$x $y $w $h"
+}
+
+function get_window_center {
+    unset x y
+    win_info=$(get_window_dimensions "$1")
+    x=$(echo "$win_info" | awk '{print $3}')
+    y=$(echo "$win_info" | awk '{print $4}')
+    echo -n "$((x / 2)) $((y / 2))"
 }
 
 case $action in
@@ -149,6 +159,32 @@ case $action in
                 win_y=$((win_y + win_height))
             done
         fi
+        ;;
+    prev)
+        prev=
+        for i in $all_wins; do
+            if [[ $i -ne $win ]]; then
+                prev=$i
+            elif [[ $i -eq $win ]] && [[ -n $prev ]]; then
+                win_center=$(get_window_center "$prev")
+                xdotool windowfocus "$prev"
+                xdotool mousemove -w "$prev" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
+                exit
+            fi
+        done
+        ;;
+    next)
+        prev=
+        for i in $all_wins; do 
+            if [[ $prev -eq $win ]] && [[ -n $prev ]]; then
+                win_center=$(get_window_center "$i")
+                xdotool windowfocus "$i"
+                xdotool mousemove -w "$i" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
+                exit
+            else
+                prev=$i
+            fi 
+        done
         ;;
     *)
         printf "You need to specify action.\n"
