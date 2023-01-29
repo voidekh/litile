@@ -110,6 +110,8 @@ case $action in
         if [[ $new_x_offset -le $workspace_w ]]; then
             wmctrl -i -r "$win" -b remove,maximized_vert,maximized_horz
             wmctrl -i -r "$win" -e 0,"$new_x","$y","$w","$h"
+            xdotool windowfocus "$win"
+            xdotool windowraise "$win"
         fi
         ;;
     move-left)
@@ -125,6 +127,8 @@ case $action in
         if [[ $new_x -ge 0 ]]; then
             wmctrl -i -r "$win" -b remove,maximized_vert,maximized_horz
             wmctrl -i -r "$win" -e 0,"$new_x","$y","$w","$h"
+            xdotool windowfocus "$win"
+            xdotool windowraise "$win"
         fi
         ;;
     tile)
@@ -168,6 +172,7 @@ case $action in
             elif [[ $i -eq $win ]] && [[ -n $prev ]]; then
                 win_center=$(get_window_center "$prev")
                 xdotool windowfocus "$prev"
+                xdotool windowraise "$prev"
                 xdotool mousemove -w "$prev" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
                 exit
             fi
@@ -179,6 +184,7 @@ case $action in
             if [[ $prev -eq $win ]] && [[ -n $prev ]]; then
                 win_center=$(get_window_center "$i")
                 xdotool windowfocus "$i"
+                xdotool windowraise "$i"
                 xdotool mousemove -w "$i" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
                 exit
             else
