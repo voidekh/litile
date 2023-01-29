@@ -23,6 +23,8 @@
 # move-right - Move window to right display
 # prev - Focus and move cursor to previous window on the same workspace
 # next - Focus and move cursor to next window on the same workspace
+# display-prev - Move cursor to previous display
+# display-next - Move cursor to next display
 #
 # Defining number of displays in CLI or in ~/.config/litilerc makes it work faster. Otherwise
 # xrandr is called every time.
@@ -67,7 +69,6 @@ if [[ -z $displays ]]; then
     if [[ -n $DISPLAYS ]]; then
         displays=$DISPLAYS
     else
-        echo 'here'
         displays=$(xrandr | grep -c " connected")
     fi
 fi
@@ -191,6 +192,27 @@ case $action in
                 prev=$i
             fi 
         done
+        ;;
+    display-prev)
+        x=$(xdotool getmouselocation | awk '{print $1}' | cut -d ':' -f2)
+        prev_display=$(((x / display_w) - 1))
+        if [[ $prev_display -lt 0 ]]; then
+            prev_display=0
+        fi
+        display_start=$((display_w * prev_display))
+        display_middle=$((display_start + display_w / 2))
+        xdotool mousemove "$display_middle" $((display_h / 2))
+
+        ;;
+    display-next)
+        x=$(xdotool getmouselocation | awk '{print $1}' | cut -d ':' -f2)
+        next_display=$(((x / display_w) + 1))
+        if [[ $next_display -gt $((displays - 1)) ]]; then
+            next_display=$((displays - 1))
+        fi
+        display_start=$((display_w * next_display))
+        display_middle=$((display_start + display_w / 2))
+        xdotool mousemove "$display_middle" $((display_h / 2))
         ;;
     *)
         printf "You need to specify action.\n"

@@ -27,6 +27,8 @@ litile [-d=numberofdisplays] action
 - move-right - Move window to right display
 - prev - Focus and move cursor to previous window on the same workspace
 - next - Focus and move cursor to next window on the same workspace
+- display-prev - Move cursor to previous display
+- display-next - Move cursor to next display
 
 Defining number of displays in CLI or in ~/.config/litilerc makes it work faster.
 Otherwise xrandr is called every time which is slow.
