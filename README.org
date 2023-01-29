@@ -29,6 +29,5 @@ Defining number of displays in CLI or in ~/.config/litilerc makes it work faster
 Otherwise xrandr is called every time which is slow.
 
 ** Caveats
-- it assumes you have a top panel on every display (might fix it)
-- when tiling master window, top_bar value needs to be doubled for unknown reason
+- it assumes you have a top panel on every display
 

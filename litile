@@ -27,7 +27,6 @@
 #
 # Problems:
 # - it assumes you have a top panel on every display
-# - when tiling master window, top_bar value needs to be doubled for unknown reason
 
 win=$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}' | cut -d "," -f1)
 
@@ -138,7 +137,7 @@ case $action in
             wmctrl -i -r "$win" -b add,maximized_vert,maximized_horz
         else
             wmctrl -i -r "$win" -b remove,maximized_vert,maximized_horz
-            wmctrl -i -r "$win" -e 0,$display_start,$((top_bar * 2)),$((display_w/2)),$display_h
+            wmctrl -i -r "$win" -e 0,$display_start,"$top_bar",$((display_w/2)),$display_h
             
             win_count=$(echo "$wins_on_screen" | wc -w)
             win_height=$((display_h/win_count))
