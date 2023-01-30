@@ -76,7 +76,7 @@ fi
 top_bar=$(xprop -root _NET_WORKAREA | awk '{ print $4 }' | cut -d"," -f1)
 titlebar_offset=$(xwininfo -id "$win" | awk '/Relative upper-left Y:/ { print $4 }')
 display_w=$(("$workspace_w" / "$displays"))
-display_h=$((workspace_h - titlebar_offset))
+display_h=$workspace_h
 
 function get_window_dimensions {
     unset x y w h
@@ -85,7 +85,7 @@ function get_window_dimensions {
     y=$(echo "$win_info" | grep "Absolute upper-left Y:" | awk '{print $4}')
     w=$(echo "$win_info" | grep "Width:" | awk '{print $2}')
     h=$(echo "$win_info" | grep "Height:" | awk '{print $2}')
-    echo -n "$x $y $w $h"
+    echo -n "$x $((y - titlebar_offset)) $w $h"
 }
 
 function get_window_center {
@@ -152,7 +152,7 @@ case $action in
             wmctrl -i -r "$win" -b add,maximized_vert,maximized_horz
         else
             wmctrl -i -r "$win" -b remove,maximized_vert,maximized_horz
-            wmctrl -i -r "$win" -e 0,$display_start,"$top_bar",$((display_w/2)),$display_h
+            wmctrl -i -r "$win" -e 0,$display_start,"$top_bar",$((display_w/2)),"$display_h"
             
             win_count=$(echo "$wins_on_screen" | wc -w)
             win_height=$((display_h/win_count))
