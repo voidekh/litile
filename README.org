@@ -23,6 +23,7 @@ litile [-d=numberofdisplays] action
 
 *** Available actions:
 - tile - Tiles current display with master-stack layout, currently focused window being master
+- monocle - Maximizes currently focused window, and also raises it (so it covers tiled ones)
 - move-left - Moves window to left display
 - move-right - Move window to right display
 - prev - Focus and move cursor to previous window on the same workspace

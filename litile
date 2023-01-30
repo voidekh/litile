@@ -19,6 +19,7 @@
 #
 # Available actions:
 # tile - Tiles current display with master-stack layout, currently focused window being master
+# monocle - Maximizes currently focused window, and also raises it (so it covers tiled ones)
 # move-left - Moves window to left display
 # move-right - Move window to right display
 # prev - Focus and move cursor to previous window on the same workspace
@@ -164,6 +165,11 @@ case $action in
                 win_y=$((win_y + win_height))
             done
         fi
+        ;;
+    monocle)
+        wmctrl -i -r "$win" -b add,maximized_vert,maximized_horz
+        xdotool windowfocus "$win"
+        xdotool windowraise "$win"
         ;;
     prev)
         prev=
