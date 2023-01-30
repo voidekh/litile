@@ -74,22 +74,20 @@ if [[ -z $displays ]]; then
 fi
 
 top_bar=$(xprop -root _NET_WORKAREA | awk '{ print $4 }' | cut -d"," -f1)
-titlebar_offset=$(xwininfo -id "$win" | awk '/Relative upper-left Y:/ { print $4 }')
 display_w=$(("$workspace_w" / "$displays"))
 display_h=$workspace_h
 
 function get_window_dimensions {
-    unset x y w h
     win_info=$(xwininfo -id "$1")
+    titlebar_offset=$(xwininfo -id "$1" | awk '/Relative upper-left Y:/ { print $4 }')
     x=$(echo "$win_info" | grep "Absolute upper-left X:" | awk '{print $4}')
     y=$(echo "$win_info" | grep "Absolute upper-left Y:" | awk '{print $4}')
     w=$(echo "$win_info" | grep "Width:" | awk '{print $2}')
     h=$(echo "$win_info" | grep "Height:" | awk '{print $2}')
-    echo -n "$x $((y - titlebar_offset)) $w $h"
+    echo -n "$x $((y - titlebar_offset)) $w $h $titlebar_offset"
 }
 
 function get_window_center {
-    unset x y
     win_info=$(get_window_dimensions "$1")
     x=$(echo "$win_info" | awk '{print $3}')
     y=$(echo "$win_info" | awk '{print $4}')
@@ -144,6 +142,7 @@ case $action in
             win_dimensions=$(get_window_dimensions "$i")
             x=$(echo "$win_dimensions" | awk '{print $1}')
             w=$(echo "$win_dimensions" | awk '{print $3}')
+            offset=$(echo "$win_dimensions" | awk '{print $5}')
             if [[ $x -ge $display_start && $x -lt $display_end && $i -ne $win ]]; then
                 wins_on_screen+=" $i"
             fi
@@ -152,15 +151,16 @@ case $action in
             wmctrl -i -r "$win" -b add,maximized_vert,maximized_horz
         else
             wmctrl -i -r "$win" -b remove,maximized_vert,maximized_horz
-            wmctrl -i -r "$win" -e 0,$display_start,"$top_bar",$((display_w/2)),"$display_h"
+            wmctrl -i -r "$win" -e 0,$display_start,"$top_bar",$((display_w/2)),$((display_h - offset))
             
             win_count=$(echo "$wins_on_screen" | wc -w)
             win_height=$((display_h/win_count))
             win_y=$top_bar
 
             for i in $wins_on_screen; do 
+                win_offset=$(xwininfo -id "$i" | awk '/Relative upper-left Y:/ { print $4 }')
                 wmctrl -i -r "$i" -b remove,maximized_vert,maximized_horz
-                wmctrl -i -r "$i" -e 0,$display_middle,"$win_y",$((display_w/2)),$win_height
+                wmctrl -i -r "$i" -e 0,$display_middle,"$win_y",$((display_w/2)),$((win_height - win_offset))
                 win_y=$((win_y + win_height))
             done
         fi
