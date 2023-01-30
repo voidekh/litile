@@ -3,6 +3,8 @@
 A little tiling script written in pure bash. Supports multiple horizontal 
 displays of the same resolution.
 
+[[https://imgur.com/d4aFaBu.gif]]
+
 Tested with Xfce, but should work with any floating WM.
 
 ** Dependencies
