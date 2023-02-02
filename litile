@@ -174,12 +174,14 @@ function tile {
         win_count=$(echo "$wins_on_screen" | wc -w)
         win_height=$((display_h/win_count))
         win_y=$top_bar
+        win_first=1
 
         for i in $wins_on_screen; do 
             win_offset=$(xwininfo -id "$i" | awk '/Relative upper-left Y:/ { print $4 }')
             unmaximize "$i"
             move "$i" $display_middle "$win_y" $((display_w/2)) $((win_height - win_offset))
             win_y=$((win_y + win_height))
+            [[ $win_first -eq 1 ]] && win_y=$((win_y + win_offset)) && win_first=0
         done
     fi
 }
