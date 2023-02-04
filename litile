@@ -37,7 +37,7 @@
 win=$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}' | cut -d "," -f1)
 
 workspace=$(wmctrl -d | grep "\*" | awk '{print $1}')
-all_wins=$(wmctrl -l | grep "$workspace $HOSTNAME" | awk '{print $1}')
+all_wins=$(wmctrl -l | grep "0x........  \?$workspace" | awk '{print $1}')
 
 if [[ -z "$win" ]] || [[ ! "$all_wins" =~ $(echo "$win" | cut -d 'x' -f2) ]]; then
     notify-send "No focused window"
