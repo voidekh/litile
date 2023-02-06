@@ -104,6 +104,14 @@ function maximize {
     wmctrl -i -r "$1" -b add,maximized_vert,maximized_horz
 }
 
+function unminimize {
+    xdotool windowactivate "$1"
+}
+
+function minimize {
+    xdotool windowminimize "$1"
+}
+
 function focus {
     xdotool windowfocus "$1"
     xdotool windowraise "$1"
@@ -179,6 +187,7 @@ function tile {
         for i in $wins_on_screen; do 
             win_offset=$(xwininfo -id "$i" | awk '/Relative upper-left Y:/ { print $4 }')
             unmaximize "$i"
+            unminimize "$i"
             move "$i" $display_middle "$win_y" $((display_w/2)) $((win_height - win_offset))
             win_y=$((win_y + win_height))
             [[ $win_first -eq 1 ]] && win_y=$((win_y + win_offset)) && win_first=0
@@ -187,6 +196,21 @@ function tile {
 }
 
 function monocle {
+    win_dimensions=$(get_window_dimensions "$win")
+    x=$(echo "$win_dimensions" | awk '{print $1}')
+    current_display=$(((x / display_w))) # 0 = first
+    display_start=$((display_w * current_display))
+    display_middle=$((display_start + display_w / 2))
+    display_end=$((display_start + display_w))
+    for i in $all_wins; do 
+        win_dimensions=$(get_window_dimensions "$i")
+        x=$(echo "$win_dimensions" | awk '{print $1}')
+        w=$(echo "$win_dimensions" | awk '{print $3}')
+        offset=$(echo "$win_dimensions" | awk '{print $5}')
+        if [[ $x -ge $display_start && $x -lt $display_end && $i -ne $win ]]; then
+            minimize "$i"
+        fi
+    done
     maximize "$win"
     focus "$win"
 }
