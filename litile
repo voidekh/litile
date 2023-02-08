@@ -34,50 +34,16 @@
 # Problems:
 # - it assumes you have a top panel on every display
 
-win=$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}' | cut -d "," -f1)
+function get_displays {
+    xrandr | grep -c " connected"
+}
 
-workspace=$(wmctrl -d | grep "\*" | awk '{print $1}')
-all_wins=$(wmctrl -l | grep "0x........  \?$workspace" | awk '{print $1}')
+function init_displays {
+    displays=$(get_displays)
+    echo "DISPLAYS=$displays" > "$XDG_RUNTIME_DIR"/litile-init
 
-if [[ -z "$win" ]] || [[ ! "$all_wins" =~ $(echo "$win" | cut -d 'x' -f2) ]]; then
-    notify-send "No focused window"
-    exit
-fi
-
-workspace_w=$(wmctrl -d | grep "\*" | awk '{print $9}' | cut -d "x" -f 1)
-workspace_h=$(wmctrl -d | grep "\*" | awk '{print $9}' | cut -d "x" -f 2)
-
-for i in "$@"; do
-    case $i in
-        -d=*|--displays=*)
-            displays="${i#*=}"
-            shift
-            ;;
-        -*)
-            echo "Unknown option $i"
-            exit 1
-            ;;
-        *)
-            action="$i"
-            ;;
-    esac
-done
-
-if [[ -f "$HOME"/.config/litilerc ]]; then
-    source "$HOME"/.config/litilerc
-fi
-
-if [[ -z $displays ]]; then
-    if [[ -n $DISPLAYS ]]; then
-        displays=$DISPLAYS
-    else
-        displays=$(xrandr | grep -c " connected")
-    fi
-fi
-
-top_bar=$(xprop -root _NET_WORKAREA | awk '{ print $4 }' | cut -d"," -f1)
-display_w=$(("$workspace_w" / "$displays"))
-display_h=$workspace_h
+    echo "$displays"
+}
 
 function get_window_dimensions {
     win_info=$(xwininfo -id "$1")
@@ -271,6 +237,55 @@ function select-window {
     monocle
 }
 
+win=$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}' | cut -d "," -f1)
+
+workspace=$(wmctrl -d | grep "\*" | awk '{print $1}')
+all_wins=$(wmctrl -l | grep "0x........  \?$workspace" | awk '{print $1}')
+
+if [[ -z "$win" ]] || [[ ! "$all_wins" =~ $(echo "$win" | cut -d 'x' -f2) ]]; then
+    notify-send "No focused window"
+    exit
+fi
+
+workspace_w=$(wmctrl -d | grep "\*" | awk '{print $9}' | cut -d "x" -f 1)
+workspace_h=$(wmctrl -d | grep "\*" | awk '{print $9}' | cut -d "x" -f 2)
+
+for i in "$@"; do
+    case $i in
+        -d=*|--displays=*)
+            displays="${i#*=}"
+            shift
+            ;;
+        -*)
+            echo "Unknown option $i"
+            exit 1
+            ;;
+        *)
+            action="$i"
+            ;;
+    esac
+done
+
+if [[ -f "$HOME"/.config/litilerc ]]; then
+    source "$HOME"/.config/litilerc
+fi
+
+if [[ -f "$XDG_RUNTIME_DIR"/litile-init ]]; then
+    source "$XDG_RUNTIME_DIR"/litile-init
+fi
+
+if [[ -z $displays ]]; then
+    if [[ -n $DISPLAYS ]]; then
+        displays=$DISPLAYS
+    else
+        displays=$(init_displays)
+    fi
+fi
+
+top_bar=$(xprop -root _NET_WORKAREA | awk '{ print $4 }' | cut -d"," -f1)
+display_w=$(("$workspace_w" / "$displays"))
+display_h=$workspace_h
+
 case $action in
     move-right)
         move-right
@@ -298,6 +313,9 @@ case $action in
         ;;
     display-next)
         display-next
+        ;;
+    re-init)
+        init_displays
         ;;
     *)
         printf "You need to specify an action.\n"

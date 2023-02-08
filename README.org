@@ -33,9 +33,11 @@ litile [-d=numberofdisplays] action
 - display-prev - Move cursor to previous display
 - display-next - Move cursor to next display
 - select-window - Overview-like feature (show all windows on display, and select one with your mouse)
+- re-init - Let LiTile count your displays again and cache in $XDG_RUNTIME_DIR/litile-init file
 
-Defining number of displays in CLI or in ~/.config/litilerc makes it work faster.
-Otherwise xrandr is called every time which is slow.
+Defining number of displays in CLI or in ~/.config/litilerc takes precedence over
+detected number of displays (which is done on first run after reboot and stored
+in $XDG_RUNTIME_DIR/litile-init file.
 
 ** Caveats
 - it assumes you have a top panel on every display
