@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 #     __    _ _______ __
 #    / /   (_)_  __(_) /__
 #   / /   / / / / / / / _ \
@@ -34,95 +34,95 @@
 # Problems:
 # - it assumes you have a top panel on every display
 
-function get_displays {
+get_displays() {
     xrandr | grep -c " connected"
 }
 
-function init_displays {
+init_displays() {
     displays=$(get_displays)
     echo "DISPLAYS=$displays" > "$XDG_RUNTIME_DIR"/litile-init
 
     echo "$displays"
 }
 
-function get_window_dimensions {
+get_window_dimensions() {
     win_info=$(xwininfo -id "$1")
     titlebar_offset=$(xwininfo -id "$1" | awk '/Relative upper-left Y:/ { print $4 }')
     x=$(echo "$win_info" | grep "Absolute upper-left X:" | awk '{print $4}')
     y=$(echo "$win_info" | grep "Absolute upper-left Y:" | awk '{print $4}')
     w=$(echo "$win_info" | grep "Width:" | awk '{print $2}')
     h=$(echo "$win_info" | grep "Height:" | awk '{print $2}')
-    echo -n "$x $((y - titlebar_offset)) $w $h $titlebar_offset"
+    echo "$x $((y - titlebar_offset)) $w $h $titlebar_offset"
 }
 
-function get_window_center {
+get_window_center() {
     win_info=$(get_window_dimensions "$1")
     x=$(echo "$win_info" | awk '{print $3}')
     y=$(echo "$win_info" | awk '{print $4}')
-    echo -n "$((x / 2)) $((y / 2))"
+    echo "$((x / 2)) $((y / 2))"
 }
 
-function unmaximize {
+unmaximize() {
     wmctrl -i -r "$1" -b remove,maximized_vert,maximized_horz
 }
 
-function maximize {
+maximize() {
     wmctrl -i -r "$1" -b add,maximized_vert,maximized_horz
 }
 
-function unminimize {
+unminimize() {
     xdotool windowactivate "$1"
 }
 
-function minimize {
+minimize() {
     xdotool windowminimize "$1"
 }
 
-function focus {
+focus() {
     xdotool windowfocus "$1"
     xdotool windowraise "$1"
 }
 
-function move {
+move() {
     wmctrl -i -r "$1" -e 0,"$2","$3","$4","$5"
 }
 
-function move-right {
+move_right() {
     win_dimensions=$(get_window_dimensions "$win")
     new_x=$(($(echo "$win_dimensions" | awk '{print $1}') + display_w))
     new_x_offset=$(($(echo "$win_dimensions" | awk '{print $1+$3}') + display_w))
     y=$(echo "$win_dimensions" | awk '{print $2}')
     w=$(echo "$win_dimensions" | awk '{print $3}')
     h=$(echo "$win_dimensions" | awk '{print $4}')
-    if [[ $new_x_offset -gt $workspace_w ]]; then
+    if [ $new_x_offset -gt "$workspace_w" ]; then
         new_x_offset=$workspace_w
         new_x=$((new_x_offset - w))
     fi
-    if [[ $new_x_offset -le $workspace_w ]]; then
+    if [ "$new_x_offset" -le "$workspace_w" ]; then
         unmaximize "$win"
         move "$win" "$new_x" "$y" "$w" "$h"
         focus "$win"
     fi
 }
 
-function move-left {
+move_left() {
     win_dimensions=$(get_window_dimensions "$win")
     new_x=$(($(echo "$win_dimensions" | awk '{print $1}') - display_w))
     new_x_offset=$(($(echo "$win_dimensions" | awk '{print $1+$3}') - display_w))
     y=$(echo "$win_dimensions" | awk '{print $2}')
     w=$(echo "$win_dimensions" | awk '{print $3}')
     h=$(echo "$win_dimensions" | awk '{print $4}')
-    if [[ $new_x -lt 0 ]]; then
+    if [ $new_x -lt 0 ]; then
         new_x=0
     fi
-    if [[ $new_x -ge 0 ]]; then
+    if [ $new_x -ge 0 ]; then
         unmaximize "$win"
         move "$win" "$new_x" "$y" "$w" "$h"
         focus "$win"
     fi
 }
 
-function tile {
+tile() {
     win_dimensions=$(get_window_dimensions "$win")
     x=$(echo "$win_dimensions" | awk '{print $1}')
     current_display=$(((x / display_w))) # 0 = first
@@ -134,34 +134,37 @@ function tile {
         win_dimensions=$(get_window_dimensions "$i")
         x=$(echo "$win_dimensions" | awk '{print $1}')
         w=$(echo "$win_dimensions" | awk '{print $3}')
-        offset=$(echo "$win_dimensions" | awk '{print $5}')
-        if [[ $x -ge $display_start && $x -lt $display_end && $i -ne $win ]]; then
-            wins_on_screen+=" $i"
+        if [ "$x" -ge $display_start ] && [ "$x" -lt $display_end ] && [ "$(printf '%d' "$i")" -ne "$(printf '%d' "$win")" ]; then
+            wins_on_screen="$wins_on_screen $i"
         fi
     done
-    if [[ -z $wins_on_screen ]]; then
+    if [ -z "$wins_on_screen" ]; then
         maximize "$win"
     else
+        win_offset=$(xwininfo -id "$win" | awk '/Relative upper-left Y:/ { print $4 }')
         unmaximize "$win"
-        move "$win" $display_start "$top_bar" $((display_w/2)) $((display_h - offset))
+        move "$win" $display_start "$top_bar" $((display_w/2)) $((display_h - win_offset))
         
         win_count=$(echo "$wins_on_screen" | wc -w)
         win_height=$((display_h/win_count))
         win_y=$top_bar
-        win_first=1
 
-        for i in $wins_on_screen; do 
+        for i in $wins_on_screen; do
+            # if [ $win_first -eq 1 ]; then
+            #     win_first=0
+            #     win_offset=0
+            # else
             win_offset=$(xwininfo -id "$i" | awk '/Relative upper-left Y:/ { print $4 }')
+            # fi
             unmaximize "$i"
             unminimize "$i"
             move "$i" $display_middle "$win_y" $((display_w/2)) $((win_height - win_offset))
             win_y=$((win_y + win_height))
-            [[ $win_first -eq 1 ]] && win_y=$((win_y + win_offset)) && win_first=0
         done
     fi
 }
 
-function monocle {
+monocle() {
     win_dimensions=$(get_window_dimensions "$win")
     x=$(echo "$win_dimensions" | awk '{print $1}')
     current_display=$(((x / display_w))) # 0 = first
@@ -172,8 +175,7 @@ function monocle {
         win_dimensions=$(get_window_dimensions "$i")
         x=$(echo "$win_dimensions" | awk '{print $1}')
         w=$(echo "$win_dimensions" | awk '{print $3}')
-        offset=$(echo "$win_dimensions" | awk '{print $5}')
-        if [[ $x -ge $display_start && $x -lt $display_end && $i -ne $win ]]; then
+        if [ "$x" -ge $display_start ] && [ "$x" -lt $display_end ] && [ "$(printf '%d' "$i")" -ne "$(printf '%d' "$win")" ]; then
             minimize "$i"
         fi
     done
@@ -181,27 +183,27 @@ function monocle {
     focus "$win"
 }
 
-function prev {
+prev() {
     prev=
     for i in $all_wins; do
-        if [[ $i -ne $win ]]; then
+        if [ "$i" -ne "$win" ]; then
             prev=$i
-        elif [[ $i -eq $win ]] && [[ -n $prev ]]; then
+        elif [ "$i" -eq "$win" ] && [ -n "$prev" ]; then
             win_center=$(get_window_center "$prev")
             focus "$prev"
-            xdotool mousemove -w "$prev" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
+            xdotool mousemove -w "$prev" "$(echo "$win_center" | cut -d ' ' -f1)" "$(echo "$win_center" | cut -d ' ' -f2)"
             exit
         fi
     done
 }
 
-function next {
+next() {
     prev=
     for i in $all_wins; do 
-        if [[ $prev -eq $win ]] && [[ -n $prev ]]; then
+        if [ "$prev" -eq "$win" ] && [ -n "$prev" ]; then
             win_center=$(get_window_center "$i")
             focus "$i"
-            xdotool mousemove -w "$i" "$(cut -d ' ' -f1 <<< "$win_center")" "$(cut -d ' ' -f2 <<< "$win_center")"
+            xdotool mousemove -w "$i" "$(echo "$win_center" | cut -d ' ' -f1)" "$(echo "$win_center" | cut -d ' ' -f2)"
             exit
         else
             prev=$i
@@ -209,10 +211,10 @@ function next {
     done
 }
 
-function display-prev {
+display_prev() {
     x=$(xdotool getmouselocation | awk '{print $1}' | cut -d ':' -f2)
     prev_display=$(((x / display_w) - 1))
-    if [[ $prev_display -lt 0 ]]; then
+    if [ $prev_display -lt 0 ]; then
         prev_display=0
     fi
     display_start=$((display_w * prev_display))
@@ -220,10 +222,10 @@ function display-prev {
     xdotool mousemove "$display_middle" $((display_h / 2))
 }
 
-function display-next {
+display_next() {
     x=$(xdotool getmouselocation | awk '{print $1}' | cut -d ':' -f2)
     next_display=$(((x / display_w) + 1))
-    if [[ $next_display -gt $((displays - 1)) ]]; then
+    if [ $next_display -gt $((displays - 1)) ]; then
         next_display=$((displays - 1))
     fi
     display_start=$((display_w * next_display))
@@ -231,7 +233,7 @@ function display-next {
     xdotool mousemove "$display_middle" $((display_h / 2))
 }
 
-function select-window {
+select_window() {
     tile
     win=$(xdotool selectwindow)
     monocle
@@ -242,7 +244,7 @@ win=$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}' | cut -d "," -f1)
 workspace=$(wmctrl -d | grep "\*" | awk '{print $1}')
 all_wins=$(wmctrl -l | grep "0x........  \?$workspace" | awk '{print $1}')
 
-if [[ -z "$win" ]] || [[ ! "$all_wins" =~ $(echo "$win" | cut -d 'x' -f2) ]]; then
+if [ -z "$win" ] ||  ! echo "$all_wins" | grep -q "$(echo "$win" | cut -d 'x' -f2)"; then
     notify-send "No focused window"
     exit
 fi
@@ -266,16 +268,16 @@ for i in "$@"; do
     esac
 done
 
-if [[ -f "$HOME"/.config/litilerc ]]; then
-    source "$HOME"/.config/litilerc
+if [ -f "$HOME"/.config/litilerc ]; then
+    . "$HOME"/.config/litilerc
 fi
 
-if [[ -f "$XDG_RUNTIME_DIR"/litile-init ]]; then
-    source "$XDG_RUNTIME_DIR"/litile-init
+if [ -f "$XDG_RUNTIME_DIR"/litile-init ]; then
+    . "$XDG_RUNTIME_DIR"/litile-init
 fi
 
-if [[ -z $displays ]]; then
-    if [[ -n $DISPLAYS ]]; then
+if [ -z "$displays" ]; then
+    if [ -n "$DISPLAYS" ]; then
         displays=$DISPLAYS
     else
         displays=$(init_displays)
@@ -288,10 +290,10 @@ display_h=$workspace_h
 
 case $action in
     move-right)
-        move-right
+        move_right
         ;;
     move-left)
-        move-left
+        move_left
         ;;
     tile)
         tile
@@ -300,7 +302,7 @@ case $action in
         monocle
         ;;
     select-window)
-        select-window
+        select_window
         ;;
     prev)
         prev
@@ -309,10 +311,10 @@ case $action in
         next
         ;;
     display-prev)
-        display-prev
+        display_prev
         ;;
     display-next)
-        display-next
+        display_next
         ;;
     re-init)
         init_displays

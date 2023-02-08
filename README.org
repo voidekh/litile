@@ -1,7 +1,7 @@
 #+title: LiTile
 
-A little tiling script written in pure bash. Supports multiple horizontal 
-displays of the same resolution.
+A little tiling script written in pure POSIX shell script. Supports multiple
+horizontal displays of the same resolution.
 
 [[https://imgur.com/d4aFaBu.gif]]
 
